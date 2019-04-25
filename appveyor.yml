@@ -1,0 +1,24 @@
+version: '1.0.1.{build}'
+
+environment:
+  AWS_ACCESS_KEY_ID: AKIAJDBATNHBJ5KM7B4Q
+  AWS_SECRET_ACCESS_KEY:
+    secure: KcBXpqBAeDRp7PgQUbGInwvj62+uhKrr9kjn0ZbxjRVEx8wdEHZ4NFRLi+1doiqI
+  AWS_DEFAULT_REGION: us-east-1
+
+branches:
+  only:
+    - develop
+before_build:
+    - cmd: 'nuget restore'
+test_script:
+  - ps: echo "Intentionally skip tests."
+build:
+  project: SampleWebTest.sln
+  verbosity: minimal
+after_build:
+    - ps: "echo ... version: ${Env:APPVEYOR_BUILD_VERSION}"
+    - ps: "echo ... commit ref: ${Env:APPVEYOR_REPO_COMMIT}"
+    - ps: aws s3 sync Web.Specs/bin/Debug/ s3://s3.testery.io/accounts/testery/assemblies/example/${env:APPVEYOR_BUILD_VERSION}/
+    - ps: ./testery.sh ${env:APPVEYOR_REPO_COMMIT} ${env:APPVEYOR_BUILD_VERSION}
+image: 'Visual Studio 2017'
